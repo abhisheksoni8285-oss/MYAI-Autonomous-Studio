@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYAI - Autonomous Web & App Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white h-screen flex flex-col">
+
+    <!-- Top Navbar -->
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-md">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            🤖 <span class="text-blue-400">MYAI</span> Autonomous Studio
+        </h1>
+        <span class="text-sm bg-blue-600 px-3 py-1 rounded-full text-white font-medium">Gemini Powered</span>
+    </header>
+
+    <!-- Main Workspace (Split Screen) -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Panel: Prompt Input -->
+        <div class="w-1/3 bg-gray-800 border-r border-gray-700 p-6 flex flex-col justify-between">
+            <div class="flex flex-col gap-4">
+                <h2 class="text-lg font-semibold text-gray-200">✨ नया ऐप या वेब पेज बनाएं</h2>
+                <p class="text-sm text-gray-400">आप जो ऐप बनाना चाहते हैं उसका विवरण नीचे लिखें (जैसे: "Digital Clock", "BMI Calculator", "Todo App"):</p>
+                
+                <textarea id="promptInput" rows="6" 
+                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 resize-none"
+                    placeholder="यहाँ अपना प्रॉम्प्ट लिखें..."></textarea>
+            </div>
+
+            <button id="generateBtn" onclick="generateApp()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 flex justify-center items-center gap-2 shadow-lg">
+                🚀 ऐप जनरेट करें
+            </button>
+        </div>
+
+        <!-- Right Panel: Live App & Web Preview -->
+        <div class="w-2/3 bg-gray-950 flex flex-col">
+            <div class="bg-gray-800 px-4 py-2 border-b border-gray-700 text-sm text-gray-400 flex justify-between items-center">
+                <span>🌐 लाइव ऐप प्रीव्यू (Live Preview)</span>
+                <a id="openNewTab" href="/static/preview.html" target="_blank" class="text-blue-400 hover:underline text-xs hidden">नए टैब में खोलें ↗</a>
+            </div>
+            <div class="flex-1 bg-white relative">
+                <iframe id="previewFrame" src="about:blank" class="w-full h-full border-none"></iframe>
+                
+                <!-- Loading Overlay -->
+                <div id="loader" class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex flex-col justify-center items-center gap-3 hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    <p class="text-blue-400 font-medium animate-pulse">एजेंट आपका ऐप तैयार कर रहा है...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function generateApp() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            const loader = document.getElementById('loader');
+            const previewFrame = document.getElementById('previewFrame');
+            const openNewTab = document.getElementById('openNewTab');
+            const btn = document.getElementById('generateBtn');
+
+            if (!prompt) {
+                alert('कृपया पहले कोई प्रॉम्प्ट लिखें!');
+                return;
+            }
+
+            loader.classList.remove('hidden');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    previewFrame.src = data.preview_url + "?t=" + new Date().getTime();
+                    openNewTab.classList.remove('hidden');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('सर्वर कनेक्ट करने में त्रुटि हुई!');
+                console.error(err);
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
